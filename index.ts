@@ -1,4 +1,7 @@
-import * as tf from '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs-node';
+
+// Load the binding
+//const tf = require('@tensorflow/tfjs-node');
 import { kmeans } from 'ml-kmeans';
 import * as clustering from 'density-clustering';
 
@@ -24,7 +27,7 @@ const normalizedData = normalize(rawData);
 const inputTensor = tf.tensor2d(normalizedData);
 
 // Build a simple autoencoder
-const encoderDim = 2;
+const encoderDim = 3;
 const model = tf.sequential();
 model.add(tf.layers.dense({ inputShape: [4], units: 3, activation: 'relu' }));
 model.add(tf.layers.dense({ units: encoderDim, activation: 'relu', name: 'bottleneck' }));
@@ -34,8 +37,14 @@ model.add(tf.layers.dense({ units: 4, activation: 'sigmoid' })); // output shape
 model.compile({ loss: 'meanSquaredError', optimizer: 'adam' });
 
 await model.fit(inputTensor, inputTensor, {
-    epochs: 100,
-    verbose: 0,
+    epochs: 1000,  // Set a high maximum
+    verbose: 1,    // Show progress
+    validationSplit: 0.2,  // Use 20% of data for validation
+    callbacks: tf.callbacks.earlyStopping({
+        monitor: 'val_loss',
+        patience: 20,  // Stop if no improvement for 20 epochs
+        minDelta: 0.001  // Minimum change to qualify as an improvement
+    })
 });
 
 // Extract encoder output (the compressed latent space)
@@ -43,7 +52,10 @@ const bottleneckLayer = model.getLayer('bottleneck') as tf.layers.Layer;
 const encoder = tf.model({ inputs: model.inputs, outputs: bottleneckLayer.output });
 
 const compressed = encoder.predict(inputTensor) as tf.Tensor;
-const compressedArray = await compressed.array() as number[][];
+let compressedArray = await compressed.array() as number[][];
+// Convert 1D array to 2D array with second dimension of 0.5
+//compressedArray = (compressedArray).map(val => [val[0], 0.5]);
+
 compressed.dispose(); // dispose of the tensor
 
 console.log("Compressed points:", compressedArray);
@@ -89,7 +101,7 @@ function generateBasketballData(): number[][] {
 
     const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
-    for (let i = 0; i < 1450; i++) {
+    for (let i = 0; i < 1000; i++) {
         let points: number;
         let rebounds: number;
         let assists: number;
@@ -104,11 +116,15 @@ function generateBasketballData(): number[][] {
             assists = rand(5, 10);
             timeOfDay = rand(18, 21); // Evening games
         } else {
+
             // Center - lower points/assists, higher rebounds
             points = rand(10, 18);
             rebounds = rand(13, 15);
             assists = rand(1, 4);
             timeOfDay = rand(18, 22); // Evening games
+            if (Math.random() < 0.5) {
+                timeOfDay = rand(38, 55); // Evening games
+            }
         }
 
         data.push([points, rebounds, assists, timeOfDay]);
