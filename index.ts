@@ -116,6 +116,10 @@ function generateParkingData(): number[][] {
             sessionCount = rand(0, 10);
             avgDuration = rand(20, 60);
         }
+        price = 1;
+        sessionCount = 1;
+        avgDuration = 1;
+
 
         data.push([price, sessionCount, avgDuration, timeOfDay]);
     }
