@@ -3,6 +3,9 @@ import { kmeans } from 'ml-kmeans';
 import * as clustering from 'density-clustering';
 
 
+import { writeFileSync } from 'fs';
+
+
 
 // Simulated dataset: [price, session_count, avg_duration, time_of_day]
 const rawData = generateParkingData();
@@ -41,6 +44,7 @@ const encoder = tf.model({ inputs: model.inputs, outputs: bottleneckLayer.output
 
 const compressed = encoder.predict(inputTensor) as tf.Tensor;
 const compressedArray = await compressed.array() as number[][];
+compressed.dispose(); // dispose of the tensor
 
 console.log("Compressed points:", compressedArray);
 // Run K-Means on the latent vectors
@@ -137,9 +141,7 @@ function summarizeClusters(rawData: number[][], clusters: number[][]) {
 }
 
 ///////// plotting
-
 import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
-import { writeFileSync } from 'fs';
 
 const width = 800;
 const height = 600;
