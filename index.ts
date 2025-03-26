@@ -2,6 +2,8 @@ import * as tf from '@tensorflow/tfjs';
 import { kmeans } from 'ml-kmeans';
 import * as clustering from 'density-clustering';
 
+
+
 // Simulated dataset: [price, session_count, avg_duration, time_of_day]
 const rawData = generateParkingData();
 
@@ -134,3 +136,76 @@ function summarizeClusters(rawData: number[][], clusters: number[][]) {
     });
 }
 
+///////// plotting
+
+import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
+import { writeFileSync } from 'fs';
+
+const width = 800;
+const height = 600;
+const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height });
+
+await drawScatterPlot(
+    compressedArray,
+    kmeansResult.clusters,
+    'kmeans.png',
+    'K-Means Clustering (Autoencoder Output)'
+);
+
+const dbscanLabels: number[] = Array(compressedArray.length).fill(-1);
+clusters.forEach((cluster, clusterIndex) => {
+    cluster.forEach(pointIndex => {
+        dbscanLabels[pointIndex] = clusterIndex;
+    });
+});
+
+await drawScatterPlot(
+    compressedArray,
+    dbscanLabels,
+    'dbscan.png',
+    'DBSCAN Clustering (Autoencoder Output)'
+);
+
+
+async function drawScatterPlot(
+    data: number[][],
+    labels: number[],
+    fileName: string,
+    title: string
+) {
+    const colorPalette = [
+        'red', 'blue', 'green', 'orange', 'purple',
+        'cyan', 'magenta', 'yellow', 'lime', 'pink', 'gray'
+    ];
+
+    const datasets = Array.from(new Set(labels)).map((clusterId) => {
+        const points = data
+            .map((point, i) => ({ point, cluster: labels[i] }))
+            .filter(({ cluster }) => cluster === clusterId)
+            .map(({ point }) => ({ x: point[0], y: point[1] }));
+
+        return {
+            label: clusterId === -1 ? 'Noise' : `Cluster ${clusterId}`,
+            data: points,
+            backgroundColor: colorPalette[clusterId % colorPalette.length],
+            pointRadius: 5,
+        };
+    });
+
+    const configuration = {
+        type: 'scatter' as const,
+        data: { datasets },
+        options: {
+            plugins: {
+                title: { display: true, text: title }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Encoded X' } },
+                y: { title: { display: true, text: 'Encoded Y' } },
+            },
+        },
+    };
+
+    const buffer = await chartJSNodeCanvas.renderToBuffer(configuration);
+    writeFileSync(fileName, buffer);
+}

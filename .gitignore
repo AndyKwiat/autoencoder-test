@@ -10,7 +10,7 @@ yarn.lock
 .env
 .env.local
 .env.*.local
-
+*.png
 # Build output
 dist/
 build/
