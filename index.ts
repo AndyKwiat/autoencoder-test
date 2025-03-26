@@ -8,7 +8,7 @@ import { writeFileSync } from 'fs';
 
 
 // Simulated dataset: [price, session_count, avg_duration, time_of_day]
-const rawData = generateParkingData();
+const rawData = generateBasketballData();
 
 // Normalize the data (simple min-max scaling)
 function normalize(data: number[][]): number[][] {
@@ -83,6 +83,40 @@ console.log("Clusters:", clusters);
 console.log("Noise (unclustered points):", noise);
 
 summarizeClusters(rawData, clusters);
+
+function generateBasketballData(): number[][] {
+    const data: number[][] = [];
+
+    const rand = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    for (let i = 0; i < 1450; i++) {
+        let points: number;
+        let rebounds: number;
+        let assists: number;
+        let timeOfDay: number;
+
+        const isGuard = Math.random() < 0.5;
+
+        if (isGuard) {
+            // Guard - higher points/assists, lower rebounds
+            points = rand(15, 25);
+            rebounds = rand(2, 5);
+            assists = rand(5, 10);
+            timeOfDay = rand(18, 21); // Evening games
+        } else {
+            // Center - lower points/assists, higher rebounds
+            points = rand(10, 18);
+            rebounds = rand(8, 15);
+            assists = rand(1, 4);
+            timeOfDay = rand(18, 22); // Evening games
+        }
+
+        data.push([points, rebounds, assists, timeOfDay]);
+    }
+
+
+    return data;
+}
 
 function generateParkingData(): number[][] {
     const data: number[][] = [];
