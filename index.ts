@@ -16,7 +16,7 @@ function normalize(data: number[][]): number[][] {
     const mins = transposed.map(col => Math.min(...col));
     const maxs = transposed.map(col => Math.max(...col));
     return data.map(row =>
-        row.map((value, i) => (value - mins[i]) / (maxs[i] - mins[i]))
+        row.map((value, i) => maxs[i] === mins[i] ? 0.5 : (value - mins[i]) / (maxs[i] - mins[i]))
     );
 }
 
@@ -116,9 +116,7 @@ function generateParkingData(): number[][] {
             sessionCount = rand(0, 10);
             avgDuration = rand(20, 60);
         }
-        price = 1;
-        sessionCount = 1;
-        avgDuration = 1;
+
 
 
         data.push([price, sessionCount, avgDuration, timeOfDay]);
