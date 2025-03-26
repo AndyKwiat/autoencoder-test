@@ -106,7 +106,7 @@ function generateBasketballData(): number[][] {
         } else {
             // Center - lower points/assists, higher rebounds
             points = rand(10, 18);
-            rebounds = rand(8, 15);
+            rebounds = rand(13, 15);
             assists = rand(1, 4);
             timeOfDay = rand(18, 22); // Evening games
         }
